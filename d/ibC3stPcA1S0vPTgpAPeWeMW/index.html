@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>酒田米菓 売上・タスク管理（試作版）</title>
+<style>
+:root{--ink:#0f172a;--sub:#64748b;--line:#e8ecf3;--bg:#f3f5fa;--card:#fff;--pri:#4f46e5;--pri2:#7c3aed;--navy:#0b1437;--acc:#4f46e5;
+--ok:#059669;--okb:#e7f8f1;--wn:#d97706;--wnb:#fff5e6;--ng:#e11d48;--ngb:#fff0f3;--r:18px;--sh:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06)}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+/* ---------- login ---------- */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 10% -10%,#7c3aed55,transparent),radial-gradient(900px 600px at 110% 110%,#06b6d455,transparent),linear-gradient(135deg,#0b1437,#1e1b4b)}
+.lbox{background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:36px 32px;width:100%;max-width:400px}
+.logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:20px;margin-bottom:16px;box-shadow:0 8px 20px #4f46e555}
+.lbox h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}.lbox p{color:var(--sub);font-size:13px;margin:0 0 22px}
+.lbox label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin:14px 0 6px}
+.lbox select,.lbox input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;background:#f8fafc;outline:none;transition:.15s}
+.lbox select:focus,.lbox input:focus{border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px #4f46e51f}
+.pin{letter-spacing:14px;text-align:center;font-weight:700}
+.btn{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border:none;border-radius:12px;padding:11px 18px;cursor:pointer;font-weight:700;box-shadow:0 6px 16px #4f46e540;transition:.15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 20px #4f46e550}
+.btn.sub{background:#fff;color:var(--pri);border:1.5px solid #c7d2fe;box-shadow:none}.btn.sm{padding:6px 12px;font-size:12px;border-radius:10px}
+.lbox .btn{width:100%;margin-top:22px;padding:14px}.err{color:var(--ng);font-size:12px;margin-top:10px;min-height:18px}
+.demo{background:#eef2ff;color:#3730a3;border-radius:12px;padding:10px 12px;font-size:12px;margin-top:10px}
+/* ---------- shell ---------- */
+#app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.sb{align-self:start;background:var(--navy);color:#cbd5e1;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:20px 14px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;color:#fff;font-weight:800}
+.brand .logo{width:36px;height:36px;border-radius:11px;font-size:15px;margin:0;box-shadow:none}
+.brand small{display:block;font-weight:500;color:#94a3b8;font-size:11px}
+nav{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+nav .grp{font-size:10.5px;letter-spacing:.12em;color:#64748b;padding:12px 12px 4px;font-weight:700}
+nav button{background:none;border:none;text-align:left;padding:7px 12px;border-radius:11px;color:#cbd5e1;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.12s;font-size:13.5px}
+nav button:hover{background:#ffffff0f;color:#fff}
+nav button.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:700;box-shadow:0 6px 16px #4f46e566}
+nav button .dot{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0;box-shadow:0 0 0 3px #ffffff10}
+nav button .tag{margin-left:auto}
+.me{border-top:1px solid #ffffff14;padding:14px 8px 0;font-size:12px;color:#94a3b8}
+.me b{display:block;color:#fff;font-size:13px}
+.me button{margin-top:10px;width:100%;background:#ffffff10;border:1px solid #ffffff1f;color:#e2e8f0;border-radius:10px;padding:7px;cursor:pointer}
+.content{min-width:0}
+.proto{margin:16px 28px 0;background:#fff;border:1px dashed #c7d2fe;color:#4338ca;font-size:12px;padding:8px 14px;border-radius:12px}
+main{max-width:1240px;margin:0 auto;padding:20px 28px 48px}main.wide{max-width:1500px}
+h2{margin:6px 0 2px;font-size:26px;letter-spacing:-.02em;font-weight:800}
+.meta{color:var(--sub);font-size:12.5px;margin-bottom:18px}
+/* ---------- cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}.cards.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #fff}
+.card .k{font-size:12px;color:var(--sub);font-weight:600}.card .v{font-size:22px;font-weight:800;margin-top:4px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.card .s{font-size:12px;color:var(--sub);margin-top:2px}
+.cards .card:first-child{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;box-shadow:0 12px 28px #4f46e544}
+.cards .card:first-child .k,.cards .card:first-child .s{color:#e0e7ff}
+.v.ok{color:var(--ok)}.v.wn{color:var(--wn)}.v.ng{color:var(--ng)}
+.panel{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:18px;box-shadow:var(--sh);border:1px solid #fff}
+.panel h3{margin:0 0 14px;font-size:15.5px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;letter-spacing:-.01em}
+.panel h3 .r{margin-left:auto;font-weight:400}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+/* ---------- tables ---------- */
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:10px 10px;text-align:left;white-space:nowrap;vertical-align:middle}
+th{background:transparent;font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tbody tr,table tr{transition:background .12s}table tr:hover td{background:#f8faff}
+tr[data-go]{cursor:pointer}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.tag{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;line-height:1.6}
+.t-ok{background:var(--okb);color:var(--ok)}.t-wn{background:var(--wnb);color:var(--wn)}.t-ng{background:var(--ngb);color:var(--ng)}.t-gr{background:#f1f5f9;color:#475569}.t-bl{background:#eef2ff;color:#4338ca}
+/* gauge */
+.bar{position:relative;height:8px;background:#eef1f7;border-radius:99px;min-width:80px;margin-right:46px}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.bar b{position:absolute;right:-46px;width:40px;text-align:right;top:-6px;font-size:12px;font-variant-numeric:tabular-nums}
+/* inputs */
+input.f{width:140px;text-align:right;padding:7px 10px;border:1.5px solid var(--line);border-radius:10px;background:#f8fafc;outline:none;font-variant-numeric:tabular-nums;transition:.15s}
+input.f:focus,textarea:focus,.addrow input:focus{border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px #4f46e51a}
+input.f:disabled,textarea:disabled,select:disabled{background:#f8fafc;border-color:transparent;color:#475569}
+textarea{width:100%;min-height:110px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:#f8fafc;resize:vertical;outline:none;line-height:1.7}
+.tk td{white-space:normal}.tk .tt{min-width:240px}
+.tk tr.done td{color:#94a3b8}
+.tk select{padding:5px 8px;border-radius:10px;border:1.5px solid var(--line);background:#fff}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.addrow input,.addrow select{padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:#f8fafc;outline:none}
+.addrow .w{flex:1;min-width:220px}
+.ro{font-size:12.5px;color:#475569;background:#fff;border:1px solid var(--line);padding:8px 14px;border-radius:12px;margin-bottom:16px}
+.saved{color:var(--ok);font-size:12px;font-weight:700}
+.src{font-size:11.5px;color:var(--sub);margin-top:10px}
+.filter{display:inline-flex;background:#f1f5f9;border-radius:12px;padding:3px;gap:2px}
+.filter button{border:none;background:transparent;border-radius:9px;padding:5px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600}
+.filter button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+/* task list page */
+.tg{margin:18px 0 6px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.ti{display:flex;gap:10px;padding:10px 12px;border-radius:12px;font-size:13px;align-items:flex-start;transition:.12s}
+.ti:hover{background:#f8faff}.ti .x{flex:1}.ti .sm{color:var(--sub);font-size:11.5px}.ti.done .x{color:#94a3b8;text-decoration:line-through}
+.ti .tag{flex-shrink:0}
+table.ov td,table.ov th{padding:8px 8px;font-size:12.5px;overflow:hidden}table.ov th{text-align:center!important;font-size:12px;color:#475569}table.ov .rl{font-weight:600;color:#334155;position:sticky;left:0;background:#fff;z-index:1}
+table.ov tr.sub td{color:#475569}table.ov tr.blue td.num{color:#4f46e5;font-weight:700}table.ov tr.sp td{border:none;padding:4px}
+table.ov tr.b td{font-weight:800}table.ov td.tot{font-weight:800;background:#f8fafc}
+table.ov tr.hl-y td{background:#fffbeb}table.ov tr.hl-r td{background:#fff1f2}table.ov tr.hl-g td{background:#ecfdf5}
+table.ov tr.hl-y td.rl{background:#fffbeb}table.ov tr.hl-r td.rl{background:#fff1f2}table.ov tr.hl-g td.rl{background:#ecfdf5}
+@media(max-width:900px){
+ #app{grid-template-columns:minmax(0,1fr)}.cards,.cards.c4{grid-template-columns:1fr 1fr}.card .v{font-size:18px}
+ .sb{position:sticky;top:0;height:auto;z-index:10;padding:10px 12px;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px}
+ .brand{padding:0;flex:1}.me{border:none;padding:0;display:flex;align-items:center;gap:8px}.me b{display:inline}.me span{display:none}.me button{margin:0;width:auto;padding:4px 10px}
+ nav{flex-direction:row;flex-basis:100%;overflow-x:auto;gap:4px}nav .grp{display:none}nav button{white-space:nowrap;padding:7px 12px}
+ .proto{margin:12px 14px 0}main{padding:16px 14px 40px}h2{font-size:22px}
+}
+</style></head><body>
+
+<div id="login"><div class="lbox"><div class="logo">米</div>
+<h1>酒田米菓 売上・タスク管理</h1><p>試作版（データはこのブラウザ内にだけ保存されます）</p>
+<label>名前</label><select id="lname"></select>
+<label>PINコード（6桁）</label><input id="lpin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">
+<button class="btn" id="lbtn">ログイン</button><div class="err" id="lerr"></div>
+<div class="demo">試作版のPINは全員 <b>123456</b> です。5回続けて間違えると5分ロックされます。名前ごとに入力できる部門が違います（閲覧は全員が全部門）。</div>
+</div></div>
+
+<div id="app" class="hidden">
+<aside class="sb"><div class="brand"><div class="logo">米</div><div>酒田米菓<small>売上・タスク管理｜61期</small></div></div>
+<nav id="nav"></nav><div class="me" id="who"></div></aside>
+<div class="content"><div class="proto">試作版：売上実績は「前年同月比 20261126.xlsx」、目標は61期シート、タスクは営業会議タスクから取り込んだ11/27時点の数字です。予測・タスクの変更はこのブラウザにだけ保存されます。</div><main id="main"></main></div>
+</div>
+
+<script>
+/* ===================== データ ===================== */
+const ASOF="2026/11/26";const TODAY=new Date("2026-11-27");
+const MONTHS=["10月","11月","12月","1月","2月","3月","4月","5月","6月","7月","8月","9月"];
+const CUR=1; // 11月
+// 目標(百万円) 61期シート / 10月実績(円) 売上進捗10月 / 11月(円) 前年同月比20261126.xlsx / 着地予測(百万) 売上進捗11月
+const DEPTS=[
+ {id:"tohoku",name:"東北",bu:"営業部",src:"東北",tg:[19.4,21.0,26.5,11.0,14.0,18.0,31.4,13.4,20.0,29.0,26.0,17.3],oct:14998096,nov:12166919,lyTD:14292982,lyM:17043812,fc:12.5,
+  sak:"新規：日の丸サンズ㈱（安達太良SA上り）・ネクスコ東日本リテイル（安積SA上り）・食の駅・HANDA",gai:"11/6　展示会より新規：食の駅（お徳用せんべい）・コストコホールセールジャパン（お徳用せんべい）・問い合わせより　ケースタイル（静岡トヨタ様向けオランダ個包装）ほか\n11/13　食の駅お徳用せんべい３種単品販売採用、取引登録中・リッチモンドホテル仙台パリサク３種追加採用・地方銀行フードセレクション対応ほか\n11/20　新規　㈱紅商12/17OPEN凹（ぼこ）選定中・髙山YB山形スポット（酒田のラーメン・おやつカルパス）・関口仙台（コープ札幌）３月２W採用お徳用せんべい・地方銀行フードセレクション対応ほか\n11/27　新規　安積PA上り線（今月受注予定）・阿武隈高原SA下り・鏡石PA上り\n受注残396,646円"},
+ {id:"shonai",name:"庄内",bu:"営業部",src:"酒田秋田鶴岡新潟",tg:[10,10,12,4.5,3,5,11,6,10,9.8,12,7],oct:5984587,nov:7974406,lyTD:5414009,lyM:11444730,fc:8.0,
+  sak:"仮設機材お歳暮",gai:"■ 夢の倶楽様\n11月6日のジャパネットのクルーズ船寄港に向けて、多くのご注文をいただいておりましたが、寄港中止となったことで、3連休明けまでは在庫消化のため、ご注文数が減少しておりました。\nその後、連休明けには在庫もほぼ消化できたと、担当者様から伺っており、通常の発注に戻ったと思いました。\n■ 庄内観光物産館様\n11月6日のクルーズ船寄港に向けて、多くのご注文をいただいておりましたが、こちらも寄港中止の影響で、その後のご注文数は減少しておりました。\nまた、オランダせんべい5本パックの売れ行きが良く、一時的に欠品が続いておりましたが、3連休前に納品することができ、チャンスロスを防ぐことができました。\n今後は、同じような欠品が起きないよう、在庫や納品計画を見直していきたいと思います。\nこちらも連休明けから通常の発注に戻った思いました。"},
+ {id:"mujin",name:"無人販売所",bu:"営業部",src:"無人販売所",tg:[4.6,8.0,5.1,3.5,3.7,6.5,5.0,5.5,5.5,6.5,6.6,5.5],oct:4364608,nov:2963597,lyTD:null,lyM:null,fc:4.0,sak:"",gai:""},
+ {id:"koiki",name:"広域",bu:"営業部",src:"広域",tg:[9,9,9,8.5,8,9.5,9.5,8.5,8.5,11.5,8.5,8.5],oct:7627973,nov:5937047,lyTD:5622691,lyM:6425285,fc:7.0,
+  sak:"新規開拓得意先獲得・東急ストア月間・コスモス薬品関西地区",gai:"◇エコス◇いずみ生協◇シェルガーデン・お米の贈り物◇株式会社アブカン・再販リスタート◇明治屋・年末年始徳用企画◇光新星・箱物企画提案◇オオゼキ・1月度東北フェア2×10オランダせんべい2種◇東急ストア・長期販促12月～2月/米2種・12月度徳用米菓企画採用(お徳用せんべい)見込数量250C/S◇USMホールディングス(SM企業集団：グループ合計760店舗)・マルエツ308店舗、カスミ200店舗。いなげや129店舗、イオンフードスタイル123店舗※PB開発の打診あり◇こととや：2×10梅こんぶ味定番追加導入◇カクヤス：3月度スポット・米と塩のうすやき\n（今月の残り受注見込み：受注残500千円）"},
+ {id:"kikaku",name:"企画（PB・海外）",bu:"企画部",src:"OEM＋海外",tg:[80,86,84,80,63,81,92,96,75,96,70.7,96],oct:52686173,nov:48512736,lyTD:54947756,lyM:62300771,fc:51.19,
+  sak:"□11月新商品\n・酒粕せんべい：470,000円\n（NB）\n・オランドゥショコラ2種　11/20生産\n・ワイヴァンズ第二弾　11/16生産\n□再販\n・イカ焼きせんべい：490,000円\n11/26時点：受注残4,825,830円",gai:"□内訳\n・おこめぼー：28,000,000円\n・ビオラル2種：4,800,000円\n・ニッド4種：1,100,000円\n・純国産しょうゆ：2,000,000円\n・気にせんべい3種：2,100,000円\n・ドンキPB2種：960,000円\n□昨年売上\n・コプロ2種：1,500,000円\n・酒田の健康せんべい：4,700,000円\n地銀展示会：11/10~11　参加\nOEM：33件\n輸出：13件"},
+ {id:"tsuhan",name:"通販",bu:"企画部",src:"通販",tg:[2.3,2.5,2.5,1.8,2.2,2.5,2.5,2.1,2.2,1.9,2.0,2.4],oct:1335500,nov:1383904,lyTD:1424367,lyM:1608034,fc:2.0,
+  sak:"お徳2種1B 20％OFF、ricecrispy 20％OFF、oran de chocolat発売",gai:"カフェの山形カラーズ（Vtuber）イベントからオランダせんべいを知って購入しますというお客様も何名かいらっしゃったので、2回目以降イベント行う際は、実際に購入していただいた後に通販にも移動できるような仕組みを作れたらと思います。\n米と醤油のうすやき5袋送料無料キャンペーンの購入者数が27名31セットの受注でした。（全てMeta広告経由のお客様）これからこのキャンペーンを購入した方へ発送3日後・7日後・25日後・発送50日後でクーポンやリマインドのメールを設定しリピーターへ成長させます。\nお徳用甘醤油・ricecrispy 20％OFFについて楽天でも販売し動きを見ていきます。\noran de chocolatについて、下記スケジュールで動きます。\n25日LINE・メルマガ会員様へ告知\n28日チョコかけの工程の動画をSNSにUPして発売を匂わせる\n29日30日より発売の告知\n30日発売（カフェは12月1日より）広告スタート\n12月1日Xプレゼント企画"},
+ {id:"honsha",name:"本社（ファクトリー）",bu:"直販部",src:"ファクトリー",tg:[4.0,3.8,4.0,1.9,2.2,3.3,2.6,5.2,3.3,6.3,7.0,3.8],oct:4025475,nov:2886021,lyTD:2588727,lyM:2894442,fc:3.0,
+  sak:"ツアー団体対応\nギフト系強化\n11月イベント",gai:"11月21日～23日のイベント開催\n各配信者も自身のSNS等でイベントの告知を行っているため、それぞれのファン層の来場も見込まれます。\nまた、配信内で酒田米菓の商品を紹介しており、その際には実際に通販の売上につながった事例もありました。\n今回のイベントへの来場促進だけでなく、配信を通じた認知度向上や、今後の通販利用につながる可能性もあります。"},
+ {id:"yamagata",name:"山形",bu:"直販部",src:"遊友結（山形）",tg:[3.1,2.9,3.1,2.9,2.5,3.5,2.8,3.0,2.4,2.7,4.5,3.2],oct:2506753,nov:2196802,lyTD:1966346,lyM:2356330,fc:2.535,
+  sak:"縦長オランダバラ販売開始。周年祭・エスパル山形感謝祭",gai:"20～23日周年祭。抽選による追加購入やパリサク、オランダ5種パックのおまとめ買いが好調。イベント予算52万、実績56万。連休明けは人通り減少したが、引き続き5種パックやお徳用せんべい旧包材、小箱アソートなど限定感やお得感を伝えた商品案内が追加購入につながった。"},
+ {id:"sendai",name:"仙台",bu:"直販部",src:"遊友結（仙台）",tg:[2.65,2.75,3.65,3.05,2.35,3.45,2.55,3.05,2.45,2.85,4.75,2.75],oct:2015455,nov:1663289,lyTD:1780974,lyM:2088955,fc:1.919,
+  sak:"周年祭",gai:"20～23日周年祭。特別価格の5種パックや小箱アソート、パリサクが好調で抽選をきっかけとした追加購入やチラシを見ての再来店もみられた。連休明けは客足が落ち着き単品購入が中心も、周年祭で提供した玄米茶ときっかけに再来店されたお客様もおり、イベントの効果が感じられた。"},
+ {id:"akita",name:"秋田",bu:"直販部",src:"遊友結（秋田）",tg:[1.7,1.8,2.2,2.5,1.6,1.9,1.8,2.5,1.6,2.2,4.3,2.2],oct:1132228,nov:1334670,lyTD:1177722,lyM:1356843,fc:1.54,
+  sak:"バック付きオランダ3種パック、コンプリートパックの販売開始。限定セット展開を増やし単価アップを図る。",gai:"湊せんべい関連売上（352,927円）。3連休中は帰省客や旅行客、ファミリー層でにぎわい、パリサクや小箱、ギフトBOXなどのおまとめ買いが見られた。24日から隣接区画で湊せんべいの販売が始まると、楽しみに再来店されたお客様もいた。天候不良の影響もあり、その後は地元客を中心に湊せんべいが好調。自社商品との組み合わせ購入もみられ、相互案内による併売促進が今後の課題。"},
+ {id:"hiroo",name:"広尾",bu:"直販部",src:"広尾店（東京）",tg:[1.0,0.6,0.6,0.6,0.6,0.6,0.7,1.0,0.7,0.6,1.0,0.8],oct:420351,nov:237703,lyTD:648563,lyM:754746,fc:0.31,sak:"",gai:""}];
+const LY12={ // 60期 月別実績（円）：10〜8月は61期シート「60期実績売上比率」、9月は売上進捗9月タブ
+ tohoku:[15739476,17004926,21414799,9080191,11549794,14792673,25503960,10984808,16292416,23582650,21390978,15430169],
+ shonai:[5904501,3960262,6479196,4480215,2800152,4411162,10831235,6185002,7677832,14398918,8949762,8142343],
+ mujin:[5386593,4253636,6836392,2561500,2659583,4876787,3334308,3817516,3300985,6281520,4230044,4405462],
+ koiki:[7407704,6432641,6821900,7346259,6615233,7735389,8381812,6877786,6884546,11404439,6016055,7397142],
+ kikaku:[87198875+7014000,62642741,61670715+17115990,64926631+146250,30923277+7282000,62006304+7070200,73687211,83262465+7442600,64624918+561036,69456011+7062200,43137724+1375000,51658178],
+ tsuhan:[1721730,1760523,2343398,2308053,2086127,2241971,2031121,1382351,1382541,2155712,940789,1276196],
+ honsha:[2883291,3135184,3370758,1525939,1872812,2796326,2168466,4315257,2701814,5200722,5961081,4390000],
+ yamagata:[2265533,2356330,2454535,2394936,2326289,2748942,2330378,2558290,1935590,2124463,4260495,2702184],
+ sendai:[2063308,2088955,3178005,2429167,1882607,2926544,1952324,2635697,1866775,2287009,4174524,2169829],
+ akita:[1745037,1356843,1910487,2135317,1398543,1684206,1314864,1904041,1162389,1831964,3502816,1524275],
+ hiroo:[749723,754746,776278,811950,377341,558388,544250,593377,499999,415557,537223,776943]};
+const val=(d,k)=>k===0?Y(d.oct):S.fc[d.id][k]??null;
+const lyv=(d,k)=>Y(LY12[d.id][k]);
+const KUBUN=k=>k===0?'<span class="tag t-gr">実績</span>':k===1?'<span class="tag t-bl">当月着地</span>':'<span class="tag t-wn" style="background:#fff8db">予測</span>';
+// 受注残＝前年同月比xlsxの「受注残」タブ、「※ 合　計 ※」行の次の行・金額列(N列)。11/27〜11/30出荷分
+const BACKLOG=3979936;
+const OTHER={name:"特販・その他",oct:2339773,nov:1411798,lyTD:3100892,lyM:3285909}; // 全社合計にのみ計上
+const USERS=[{n:"佐藤 栄人（管理者）",edit:"*",admin:true},{n:"越中（東北）",edit:["tohoku"]},{n:"坂本（庄内）",edit:["shonai"]},{n:"恵美（無人販売所）",edit:["mujin"]},{n:"広域担当",edit:["koiki"]},{n:"村上（企画）",edit:["kikaku"]},{n:"今井（通販）",edit:["tsuhan"]},{n:"飯田（本社）",edit:["honsha"]},{n:"山形店",edit:["yamagata"]},{n:"武田（仙台・秋田）",edit:["sendai","akita"]},{n:"広尾店",edit:["hiroo"]},{n:"閲覧のみ（役員）",edit:[]}];
+const TASKS0=[
+ {id:1,t:"仙台・秋田　昨対と予算比のギャップについて",bu:"直販部",d:["sendai","akita"],p:"武田",m:"2026/11/13",due:"2026-11-20",st:"完了",memo:""},
+ {id:2,t:"10月,11月進捗シート更新　売上予測の部分",bu:"全員",d:[],p:"全員",m:"2026/09/25",due:"2026-10-02",st:"進行中",memo:""},
+ {id:3,t:"目標ギャップの各部の施策",bu:"全員",d:[],p:"各部長",m:"2026/04/03",due:"2026-04-27",st:"未着手",memo:""},
+ {id:4,t:"米と塩（エバーフロー+コートアップ40）9ヵ月根拠用検体　常温保管",bu:"企画部",d:["kikaku"],p:"堀・佐藤",m:"2026/05/04",due:"2027-04-05",st:"進行中",memo:"経時保管中"},
+ {id:5,t:"お徳用せんべいアルミ包材（9/13/18か月賞味分析用）継次保管",bu:"企画部",d:["kikaku"],p:"堀",m:"2026/06/05",due:"2027-05-03",st:"進行中",memo:"経時保管中"},
+ {id:6,t:"米と塩　賞味延長不可　油を変えてやってみる",bu:"企画部",d:["kikaku"],p:"今野",m:"",due:"",st:"保留",memo:"恒温機検体NG→再検査待ち。結果が出るまで180日・年月日表記で製造"},
+ {id:7,t:"LINE配信 無人販売所 年末年始営業について",bu:"企画部",d:["tsuhan","mujin"],p:"萩原",m:"2026/10/30",due:"2026-11-06",st:"完了",memo:""},
+ {id:8,t:"LINE配信 GODIVA 酒田米菓製造の商品発売中について",bu:"企画部",d:["tsuhan"],p:"萩原",m:"2026/10/30",due:"2026-10-30",st:"完了",memo:""},
+ {id:9,t:"11月秋田トピコ店隣の区間で無人販売所開始",bu:"営業部",d:["mujin"],p:"越中",m:"",due:"",st:"完了",memo:""},
+ {id:10,t:"ファクトリーイベント　10月中LINE・SNS配信できるように動く",bu:"企画部",d:["honsha"],p:"広報・カフェ",m:"2026/10/23",due:"2026-10-31",st:"完了",memo:""},
+ {id:11,t:"無人販売所　裏面を確認して購入・商品は元の位置に戻すよう注意喚起POP",bu:"営業部",d:["mujin"],p:"恵美",m:"2026/09/11",due:"2026-09-25",st:"完了",memo:""},
+ {id:12,t:"庄内売上げ昨年、今年8月分　250万の差額の確認",bu:"営業部",d:["shonai"],p:"坂本",m:"2026/09/04",due:"2026-09-10",st:"完了",memo:""},
+ {id:13,t:"道の駅あつみ　パリサクのオリジナルパッケージ相談（企画部へ依頼）",bu:"営業部",d:["shonai","kikaku"],p:"坂本",m:"2026/11/13",due:"2026-11-27",st:"未着手",memo:"11月進捗シート 庄内の概況より（試作用の例）"},
+ {id:14,t:"PB商品　販売大臣へ原価反映",bu:"企画部",d:["kikaku"],p:"村上",m:"2026/09/11",due:"2026-09-17",st:"完了",memo:""}];
+
+/* ===================== 状態 ===================== */
+const KEY="skb_proto_v3";
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||{fc:{},txt:{},tasks:TASKS0,nextId:100,fail:0,lockUntil:0};
+DEPTS.forEach(d=>{if(!S.fc[d.id])S.fc[d.id]={1:d.fc};if(!S.txt[d.id])S.txt[d.id]={sak:d.sak,gai:d.gai}});
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+let ME=null,TAB="all",TF="open";
+
+/* ===================== 共通 ===================== */
+const M=v=>v==null||isNaN(v)?"—":(v<0?"▲":"")+"¥"+Math.round(Math.abs(v)*1e6).toLocaleString("ja-JP");
+const Y=v=>v/1e6;
+const P=v=>v==null||!isFinite(v)?"—":Math.round(v*100)+"%";
+const lv=r=>r==null||!isFinite(r)?"":r>=1?"ok":r>=.85?"wn":"ng";
+const col=r=>({ok:"#10b981",wn:"#f59e0b",ng:"#f43f5e"}[lv(r)]||"#94a3b8");
+const bar=r=>`<div class="bar"><i style="width:${Math.min(Math.max(r||0,0),1)*100}%;background:linear-gradient(90deg,${col(r)}99,${col(r)})"></i><b style="color:${col(r)}">${P(r)}</b></div>`;
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const canEdit=id=>ME&&(ME.edit==="*"||ME.edit.includes(id));
+const deptOf=id=>DEPTS.find(d=>d.id===id);
+// 日割り：11/13時点。稼働日ベースではなく暦日の単純比
+// 稼働日数＝土日と祝日を除いた平日（会社独自の休業日は含めていない）
+const HOLIDAYS=["2026-10-12","2026-11-03","2026-11-23","2027-01-01","2027-01-11","2027-02-11","2027-02-23","2027-03-22","2027-04-29","2027-05-03","2027-05-04","2027-05-05","2027-07-19","2027-08-11","2027-09-20","2027-09-23"];
+function workdays(y,m,from=1,to=31){let n=0;for(let d=from;d<=to;d++){const t=new Date(y,m-1,d);if(t.getMonth()!==m-1)break;const w=t.getDay();const k=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;if(w!==0&&w!==6&&!HOLIDAYS.includes(k))n++;}return n;}
+const WD_M=workdays(2026,11),WD_PASSED=workdays(2026,11,1,26),WD_LEFT=WD_M-WD_PASSED;
+// 日割りは稼働日ベース
+const DAYS_PASSED=WD_PASSED,DAYS_M=WD_M;
+function stat(d){const tgt=d.tg[CUR],act=Y(d.nov),fc=S.fc[d.id][1]??null;return{tgt,act,fc,pace:act/(tgt*DAYS_PASSED/DAYS_M),r:act/tgt,fr:fc!=null?fc/tgt:null,yoy:d.lyTD?d.nov/d.lyTD:null};}
+function due(t){if(t.st==="完了")return["完了","t-gr"];if(!t.due)return["期限なし","t-wn"];const x=(new Date(t.due)-TODAY)/864e5;return x<0?["期限超過","t-ng"]:x<=7?["7日以内","t-wn"]:["","" ];}
+function tasksFor(id){const d=deptOf(id);return S.tasks.filter(t=>t.d.includes(id)||t.bu==="全員"||(t.d.length===0&&t.bu===d.bu));}
+function openCount(list){const o=list.filter(t=>t.st!=="完了");return{open:o.length,over:o.filter(t=>due(t)[0]==="期限超過").length,week:o.filter(t=>due(t)[0]==="7日以内").length};}
+
+/* ===================== ログイン ===================== */
+const ls=document.getElementById("lname");USERS.forEach((u,i)=>ls.insertAdjacentHTML("beforeend",`<option value="${i}">${u.n}</option>`));
+document.getElementById("lbtn").onclick=()=>{
+ const e=document.getElementById("lerr");if(Date.now()<S.lockUntil){e.textContent="ロック中です。しばらくしてからもう一度お試しください。";return;}
+ const pin=document.getElementById("lpin").value;
+ if(pin!=="123456"){S.fail++;if(S.fail>=5){S.lockUntil=Date.now()+5*60e3;S.fail=0;e.textContent="5回間違えたため5分間ロックしました。";}else e.textContent=`PINが違います（あと${5-S.fail}回でロック）`;save();return;}
+ S.fail=0;save();ME=USERS[+ls.value];document.getElementById("login").classList.add("hidden");document.getElementById("app").classList.remove("hidden");
+ document.getElementById("who").innerHTML=`<b>${esc(ME.n)}</b><span>${ME.edit==="*"?"全部門を編集可":ME.edit.length?"編集可："+ME.edit.map(i=>deptOf(i).name).join("・"):"閲覧のみ"}</span><button id="lo">ログアウト</button>`;
+ document.getElementById("lo").onclick=()=>location.reload();render();};
+document.getElementById("lpin").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("lbtn").click()});
+
+/* ===================== 描画 ===================== */
+function nav(){const tc=openCount(S.tasks);let h=`<span class="grp">全社</span><button data-t="all" class="${TAB==="all"?"on":""}">📊 全社売上</button><button data-t="tasks" class="${TAB==="tasks"?"on":""}">✅ タスク一覧${tc.over?`<span class="tag t-ng">${tc.over}</span>`:""}</button>`;let bu="";
+ DEPTS.forEach(d=>{if(d.bu!==bu){bu=d.bu;h+=`<span class="grp">${bu}</span>`}const r=stat(d).fr;h+=`<button data-t="${d.id}" class="${TAB===d.id?"on":""}">${d.name}<span class="dot" style="background:${col(r)}"></span></button>`});
+ if(ME.admin)h+=`<span class="grp">管理</span><button data-t="admin" class="${TAB==="admin"?"on":""}">⚙️ 利用者・PIN</button>`;
+ const n=document.getElementById("nav");n.innerHTML=h;n.querySelectorAll("button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render();window.scrollTo(0,0)});}
+function render(){nav();const m=document.getElementById("main");m.className=TAB==="all"?"wide":"";m.innerHTML=TAB==="all"?pageAll():TAB==="tasks"?pageTasks():TAB==="admin"?pageAdmin():pageDept(deptOf(TAB));bind();}
+
+const OV={ // 61期シート「◇◇◇61期 目標＆ギャップ埋め一覧◇◇◇」上部の表とグラフ（円）
+ tgt:[137750000,148350000,152650000,120250000,103150000,135250000,161850000,146250000,131650000,169350000,147350000,149450000],
+ nb:[43000000,46000000,52600000,27500000,28200000,39000000,56900000,33400000,44000000,56800000,53100000,38300000],
+ pb:[80000000,86000000,84000000,80000000,63000000,81000000,92000000,96000000,75000000,96000000,70700000,96000000],
+ dir:[14750000,14350000,16050000,12750000,11450000,15250000,12950000,16850000,12650000,16550000,23550000,15150000],
+ ly:[148641542,111783193,136232129,101376294,73779853,114897241,130086792,132954836,110370249,143736186,105482360,120572539],
+ act:[99436972,92648828,null,null,null,null,null,null,null,null,null,null],
+ opT:null,opA:[31686000,10454000,10823000,4074000,null,null,null,null,null,null,null,null]};
+OV.opT=OV.tgt.map(v=>v*0.115);
+// 締めた月（実績確定）の数。10月=1。11月が締まったら2にする
+const CLOSED=1;
+// 全社売上目標（上乗せ）：締めた月の差額（最新目標−実績）を、残りの月へ均等に振り分ける（端数は9月で調整）
+function latestTargets(){const L=OV.tgt.slice();
+ for(let k=0;k<CLOSED;k++){const gap=L[k]-OV.act[k];const rest=[];for(let j=k+1;j<12;j++)rest.push(j);
+  const base=rest.reduce((a,j)=>a+OV.tgt[j],0);let given=0;
+  rest.forEach((j,n)=>{const add=n===rest.length-1?gap-given:Math.round(gap/rest.length);given+=add;L[j]+=add;});}
+ return L;}
+const yen=v=>v==null?"":(v<0?"-":"")+"¥"+Math.round(Math.abs(v)).toLocaleString("ja-JP");
+const sum=a=>a.reduce((x,y)=>x+(y||0),0);
+function overview(){
+ const LW=190,MW=112,TW=132,W=LW+MW*12+TW,H=300,pl=LW,pr=TW,pt=26,pb=6,max=2e8,cw=MW,bw=20;
+ const y=v=>pt+(H-pt-pb)*(1-v/max);
+ const C={ly:"#fb7185",act:"#10b981",tgt:"#fbbf24"};
+ let g=`<defs>${Object.entries(C).map(([k,c])=>`<linearGradient id="g${k}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".55"/></linearGradient>`).join("")}</defs>`;
+ [0,5e7,1e8,1.5e8,2e8].forEach(v=>g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f7"/><text x="${pl-10}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="#94a3b8">${v?v/1e6+"百万":"0"}</text>`);
+ for(let i=0;i<=12;i++)g+=`<line x1="${pl+cw*i}" x2="${pl+cw*i}" y1="${pt}" y2="${H-pb}" stroke="#f3f5fa"/>`;
+ MONTHS.forEach((m,i)=>{const cx=pl+cw*i+cw/2;
+  [["ly",OV.ly[i],-1],["act",OV.act[i],0],["tgt",OV.tgt[i],1]].forEach(([k,v,o])=>{if(v==null)return;const x=cx+o*(bw+3)-bw/2,yy=y(v);
+   g+=`<rect x="${x}" y="${yy}" width="${bw}" height="${H-pb-yy}" rx="5" fill="url(#g${k})"><title>${m} ${({ly:"60期実績",act:"61期実績",tgt:"61期目標"})[k]}：${yen(v)}</title></rect>`;
+   g+=`<text x="${x+bw/2}" y="${yy-6}" font-size="10" text-anchor="middle" fill="${C[k]==="#fbbf24"?"#b45309":k==="act"?"#047857":"#e11d48"}" font-weight="700">${(Math.round(v/1e5)/10).toFixed(1)}</text>`});
+  });
+ const lg=[["ly","全社売上実績（60期）"],["act","全社売上実績（61期）"],["tgt","全社売上目標（61期）"]].map(([k,t])=>`<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px"><i style="width:12px;height:12px;border-radius:4px;background:${C[k]}"></i>${t}</span>`).join("");
+ const row=(lab,arr,cls="",tot=true,fmt=yen)=>`<tr class="${cls}"><td class="rl">${lab}</td>${arr.map(v=>`<td class="num">${v==null?"":fmt(v)}</td>`).join("")}<td class="num tot">${tot?fmt(sum(arr)):""}</td></tr>`;
+ const lyT=sum(OV.ly),share=OV.ly.map(v=>v/lyT);
+ const diff=OV.opA.map((v,i)=>v==null?null:v-OV.opT[i]);
+ const hd=`<tr><th></th>${MONTHS.map(m=>`<th class="num">${m}</th>`).join("")}<th class="num">合計</th></tr>`;
+ return `<div class="panel"><h3>61期 目標売上 ＆ 60期実績 <span class="r meta" style="margin:0">棒の上は百万円・棒にマウスを乗せると円で表示</span></h3>
+ <div style="font-size:12.5px;color:#475569;margin:0 0 6px">${lg}</div>
+ <div class="tw"><div style="width:${W}px"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block">${g}</svg>
+ <table class="ov" style="width:${W}px;table-layout:fixed"><colgroup><col style="width:${LW}px">${Array(12).fill(`<col style="width:${MW}px">`).join("")}<col style="width:${TW}px"></colgroup>${hd}
+ ${row("全社売上目標（61期）",OV.tgt,"hl-y b")}
+ ${(()=>{const L=latestTargets();const tot=OV.act.slice(0,CLOSED).reduce((a,b)=>a+b,0)+L.slice(CLOSED).reduce((a,b)=>a+b,0);
+   return `<tr class="b"><td class="rl" style="background:#eef2ff">全社売上目標（上乗せ）</td>${L.map((v,i)=>`<td class="num" style="background:#eef2ff;${i<CLOSED?"color:#94a3b8;font-weight:500":v!==OV.tgt[i]?"color:#4338ca":""}">${yen(v)}${i>=CLOSED&&v!==OV.tgt[i]?`<div style="font-size:10.5px;font-weight:600;color:#6366f1">+${Math.round(v-OV.tgt[i]).toLocaleString("ja-JP")}</div>`:""}</td>`).join("")}<td class="num tot" style="background:#e0e7ff">${yen(tot)}</td></tr>`})()}
+ ${row("　NB（営業）",OV.nb,"hl-y")}
+ ${row("　PB（企画）",OV.pb,"hl-y")}
+ ${row("　直営＋通販目標",OV.dir,"hl-y")}
+ ${row("全社売上実績（60期）",OV.ly,"hl-r b")}
+ ${row("全社売上実績（61期）",OV.act,"hl-g b")}
+ ${(()=>{let c=0;const cum=OV.act.map((v,i)=>{if(v==null)return null;c+=v-OV.ly[i];return c});const last=cum.filter(v=>v!=null).pop();
+   const tg=OV.act.map((v,i)=>v==null?null:v-OV.tgt[i]);
+   const cell=v=>`<td class="num" style="font-weight:700;color:${v==null?"":v<0?"#e11d48":"#059669"}">${v==null?"":yen(v)}</td>`;
+   return `<tr class="b"><td class="rl">前年同月累計差額</td>${cum.map(cell).join("")}${cell(last).replace('class="num"','class="num tot"')}</tr>
+   <tr class="b"><td class="rl">目標差額（実績−目標）</td>${tg.map(cell).join("")}${cell(sum(tg)).replace('class="num"','class="num tot"')}</tr>`})()}
+ </table></div></div><div class="src">61期シート上部のグラフと表をそのまま再現（11月の61期実績は受注残込みの当月確定売上）。「全社売上目標（上乗せ）」は、締めた月（現在は10月）の目標差額を残りの月へ均等に上乗せした目標です（端数は最後の月で調整）。灰色の月は締め済み。合計欄は締めた月の実績＋残りの月の最新目標で、年間目標と一致します。差額の2行は61期の実績が出た月だけ計算し、合計欄は前年同月累計差額が最新月の累計、目標差額が実績月の合計です。</div></div>`;}
+function pageAll(){
+ let T={tgt:0,act:0,fc:0,ly:0,oct:0,octT:0,lyM:0};const rows=DEPTS.map(d=>{const s=stat(d);T.tgt+=s.tgt;T.act+=s.act;T.fc+=s.fc||0;T.ly+=Y(d.lyTD||0);T.oct+=Y(d.oct);T.octT+=d.tg[0];T.lyM+=Y(d.lyM||0);return{d,s}});
+ const oth=OTHER;const actAll=T.act+Y(oth.nov),lyAll=T.ly+Y(oth.lyTD),octAll=T.oct+Y(oth.oct);
+ const yrT=1703.3,cum=octAll+actAll,cumT=T.octT+T.tgt*DAYS_PASSED/DAYS_M;
+ const fsum=k=>DEPTS.reduce((a,d)=>a+(S.fc[d.id][k]??NaN),0),ftg=k=>DEPTS.reduce((a,d)=>a+d.tg[k],0);
+ const tc=openCount(S.tasks);
+ let h=`<div><div>`+`<h2>全社</h2><div class="meta">売上実績 ${ASOF}時点（前年同月比 20261126.xlsx）・単位 円・特販とその他は合計にのみ含む</div>`+overview()+`
+ <div class="cards c4">
+ <div class="card"><div class="k">11月 目標</div><div class="v">${M(T.tgt)}</div><div class="s">年間目標 ${M(yrT)}</div></div>
+ <div class="card"><div class="k">11月 実績（26日時点）</div><div class="v">${M(actAll)}</div><div class="s">達成率 ${P(actAll/T.tgt)}</div></div>
+ <div class="card"><div class="k">11月 稼働日数（残り）</div><div class="v">${WD_LEFT}日</div><div class="s">稼働 ${WD_M}日・経過 ${WD_PASSED}日（11/26まで）<br><span class="meta">土日祝を除く平日</span></div></div>
+ <div class="card"><div class="k">11月 1日平均売上</div><div class="v">${yen(actAll*1e6/WD_PASSED)}</div><div class="s">実績 ÷ 経過${WD_PASSED}日<br>目標達成に必要 ${yen((T.tgt-actAll)/WD_LEFT*1e6)}/日</div></div>
+ ${(()=>{const avg=actAll*1e6/WD_PASSED,stack=Math.round(avg*WD_LEFT),land=Math.round(actAll*1e6)+BACKLOG+stack,r=land/(T.tgt*1e6);return `<div class="card"><div class="k">11月 着地予測（数字上）</div><div class="v ${lv(r)}">${yen(land)}</div><div class="s">目標比 ${P(r)}<br>実績 ${yen(actAll*1e6)}<br>＋受注残 ${yen(BACKLOG)}<br>＋1日平均×残り${WD_LEFT}日 ${yen(stack)}</div></div>`})()}
+ <div class="card"><div class="k">11月 着地予測（各部門の入力合計）</div><div class="v ${lv((T.fc+Y(oth.nov))/T.tgt)}">${M(T.fc+Y(oth.nov))}</div><div class="s">目標比 ${P((T.fc+Y(oth.nov))/T.tgt)}</div></div>
+ <div class="card"><div class="k">前年同期比（1〜26日）</div><div class="v ${lv(actAll/lyAll)}">${P(actAll/lyAll)}</div><div class="s">前年 ${M(lyAll)}</div></div>
+ <div class="card"><div class="k">期累計（10月〜）</div><div class="v ${lv(cum/cumT)}">${M(cum)}</div><div class="s">累計目標 ${M(cumT)}（11月は稼働日割り）・差 ${M(cum-cumT)}</div></div></div>
+ <div class="panel"><h3>部門別 11月の進捗<span class="r meta">行をクリックで部門ページへ</span></h3><div class="tw"><table><tr><th>部署</th><th>部門</th><th class="num">目標</th><th class="num">実績</th><th>達成率</th><th class="num">着地予測</th><th>着地/目標</th><th class="num">前年同期比</th><th class="num">12月予測</th><th class="num">1月予測</th><th class="num">2月予測</th></tr>`;
+ rows.forEach(({d,s})=>{const c=openCount(tasksFor(d.id));h+=`<tr data-go="${d.id}" style="cursor:pointer"><td>${d.bu}</td><td><b>${d.name}</b></td><td class="num">${M(s.tgt)}</td><td class="num">${M(s.act)}</td><td>${bar(s.r)}</td><td class="num">${M(s.fc)}</td><td>${bar(s.fr)}</td><td class="num">${P(s.yoy)}</td>${[2,3,4].map(k=>`<td class="num">${S.fc[d.id][k]!=null?M(S.fc[d.id][k]):'<span class="tag t-wn">未入力</span>'}</td>`).join("")}</tr>`});
+ h+=`<tr><td>—</td><td>特販・その他</td><td class="num">—</td><td class="num">${M(Y(oth.nov))}</td><td></td><td class="num">${M(Y(oth.nov))}</td><td></td><td class="num">${P(oth.nov/oth.lyTD)}</td><td></td><td></td><td></td></tr>`;
+ const f=k=>isNaN(fsum(k))?'<span class="tag t-wn">未入力あり</span>':M(fsum(k));
+ h+=`<tr style="font-weight:800;background:#f3f5f8"><td></td><td>合計</td><td class="num">${M(T.tgt)}</td><td class="num">${M(actAll)}</td><td>${bar(actAll/T.tgt)}</td><td class="num">${M(T.fc+Y(oth.nov))}</td><td>${bar((T.fc+Y(oth.nov))/T.tgt)}</td><td class="num">${P(actAll/lyAll)}</td><td class="num">${f(2)}</td><td class="num">${f(3)}</td><td class="num">${f(4)}</td></tr></table></div></div>
+ <div class="panel"><h3>月別 売上予測（全社・61期 10月〜9月）</h3><div class="tw"><table><tr><th>月</th><th>区分</th><th class="num">目標</th><th class="num">予測・実績合計</th><th class="num">前年（60期）</th><th>目標比</th><th>前年比</th><th class="num">入力済み部門</th></tr>`;
+ MONTHS.forEach((mn,k)=>{const n=DEPTS.filter(d=>val(d,k)!=null).length,sm=DEPTS.reduce((a,d)=>a+(val(d,k)||0),0),l=DEPTS.reduce((a,d)=>a+lyv(d,k),0);h+=`<tr${k===CUR?' style="background:#f5f9ff"':''}><td><b>${mn}</b></td><td>${KUBUN(k)}</td><td class="num">${M(ftg(k))}</td><td class="num">${n?M(sm):"—"}</td><td class="num">${M(l)}</td><td>${n===11?bar(sm/ftg(k)):'<span class="meta">全部門の入力後</span>'}</td><td>${n===11?bar(sm/l):""}</td><td class="num">${n}/11</td></tr>`});
+ h+=`</table></div><div class="src">目標・前年とも11部門の合計（特販・その他を除く）。全部門の予測がそろった月だけゲージを表示します。</div></div>
+ `;
+ h+=`</div></div>`;return h;}
+function pageTasks(){const c=openCount(S.tasks);
+ let h=`<h2>タスク一覧</h2><div class="meta">営業会議で決まったことを部門別にまとめています。部門名をクリックするとその部門のページへ移ります。</div><div class="panel"><h3>部門別タスク <span class="tag t-bl">未完了 ${c.open}</span>${c.over?`<span class="tag t-ng">超過 ${c.over}</span>`:""}<span class="r filter"><button data-tf="open" class="${TF==="open"?"on":""}">未完了</button><button data-tf="all" class="${TF==="all"?"on":""}">すべて</button></span></h3>`;
+ const vis=t=>TF==="all"||t.st!=="完了";
+ const item=t=>{const[x,cc]=due(t);return `<div class="ti ${t.st==="完了"?"done":""}"><span class="tag ${t.st==="完了"?"t-gr":t.st==="保留"?"t-wn":"t-bl"}">${t.st}</span><div class="x">${esc(t.t)}<div class="sm">${esc(t.p)||"担当未定"}・期限 ${t.due||"なし"}</div></div>${x&&t.st!=="完了"?`<span class="tag ${cc}" style="align-self:flex-start">${x}</span>`:""}</div>`};
+ const grp=(title,list,go)=>{const v=list.filter(vis);const o=openCount(list);if(!v.length&&TF==="open"&&!go)return"";
+  return `<div class="tg" ${go?`data-go="${go}"`:""}>${title}<span class="tag t-bl">${o.open}</span>${o.over?`<span class="tag t-ng">超過${o.over}</span>`:""}${go?'<span class="sm" style="margin-left:auto;font-weight:400;color:#888">ページへ ›</span>':""}</div>`+(v.length?v.map(item).join(""):'<div class="ti"><span class="sm">未完了のタスクはありません</span></div>')};
+ h+=grp("全員",S.tasks.filter(t=>t.bu==="全員"));
+ let bu="";DEPTS.forEach(d=>{if(d.bu!==bu){bu=d.bu;const com=S.tasks.filter(t=>t.bu===bu&&t.d.length===0);h+=`<div class="meta" style="margin:14px 0 0;border-top:2px solid var(--pri);padding-top:4px">${bu}</div>`+grp(bu+"共通",com);}
+  h+=grp(d.name,S.tasks.filter(t=>t.d.includes(d.id)),d.id)});
+ return h+`<div class="src">複数部門にまたがるタスクは、それぞれの部門に表示しています。</div></div>`;}
+
+function pageDept(d){
+ const s=stat(d),ed=canEdit(d.id),fc=S.fc[d.id],tx=S.txt[d.id],cum=Y(d.oct)+s.act,cumT=d.tg[0]+d.tg[1]*DAYS_PASSED/DAYS_M,yr=d.tg.reduce((a,b)=>a+b,0);
+ let h=`<h2>${d.name}</h2><div class="meta">${d.bu}・実績の取込元「${d.src}」・${ASOF}時点・単位 円</div>${ed?"":'<div class="ro">閲覧のみです。この部門の入力は担当者だけができます。</div>'}
+ <div class="cards">
+ <div class="card"><div class="k">11月 目標</div><div class="v">${M(s.tgt)}</div><div class="s">年間 ${M(yr)}</div></div>
+ <div class="card"><div class="k">11月 実績（26日時点）</div><div class="v">${M(s.act)}</div><div class="s">達成率 ${P(s.r)}・稼働日割り進捗 ${P(s.pace)}</div></div>
+ <div class="card"><div class="k">11月 着地予測</div><div class="v ${lv(s.fr)}">${M(s.fc)}</div><div class="s">目標比 ${P(s.fr)}・差 ${M(s.fc-s.tgt)}</div></div>
+ <div class="card"><div class="k">前年同期比（1〜26日）</div><div class="v ${lv(s.yoy)}">${P(s.yoy)}</div><div class="s">前年 ${d.lyTD!=null?M(Y(d.lyTD)):"データなし"}・前年11月計 ${d.lyM?M(Y(d.lyM)):"—"}</div></div>
+ <div class="card"><div class="k">期累計（10月〜）</div><div class="v ${lv(cum/cumT)}">${M(cum)}</div><div class="s">累計目標 ${M(cumT)}（11月は稼働日割り）・10月実績 ${M(Y(d.oct))}</div></div></div>
+ <div class="panel"><h3>月別 売上予測（61期 10月〜9月）<span class="r"><span class="saved hidden" id="sv">保存しました</span></span></h3><div class="tw">
+ <table><tr><th>月</th><th>区分</th><th class="num">目標</th><th class="num">予測・実績</th><th class="num">前年（60期）</th><th>目標比</th><th>前年比</th></tr>`;
+ let sT=0,sV=0,sL=0,nE=0;
+ MONTHS.forEach((mn,k)=>{const v=val(d,k),t=d.tg[k],l=lyv(d,k);if(v!=null){sT+=t;sV+=v;sL+=l;nE++}
+  h+=`<tr${k===CUR?' style="background:#f5f9ff"':''}><td><b>${mn}</b></td><td>${KUBUN(k)}</td><td class="num">${M(t)}</td><td class="num">${k===0?M(v):`<input class="f" data-fc="${k}" value="${v!=null?Math.round(v*1e6).toLocaleString("ja-JP"):""}" placeholder="円で入力" ${ed?"":"disabled"} inputmode="decimal">`}</td><td class="num">${M(l)}</td><td>${v!=null?bar(v/t):'<span class="tag t-wn">未入力</span>'}</td><td>${v!=null&&l?bar(v/l):v!=null?'<span class="meta">前年なし</span>':""}</td></tr>`});
+ h+=`<tr style="font-weight:800;background:#f3f5f8"><td>年間</td><td>${nE}/12か月</td><td class="num">${M(d.tg.reduce((a,b)=>a+b,0))}</td><td class="num">${M(sV)}</td><td class="num">${M(LY12[d.id].reduce((a,b)=>a+b,0)/1e6)}</td><td>${nE?bar(sV/sT):""}</td><td>${nE?bar(sV/sL):""}</td></tr></table></div>
+ <div class="src">予測は円で入力（例：12,500,000）。カンマは無くても大丈夫です。年間行のゲージは、入力済みの月だけで比べています。前年は60期の月別実績（9月は売上進捗9月タブ）。</div></div>
+ <div class="grid2"> <div class="panel"><h3>今月の施策（ギャップ埋め）</h3><textarea data-tx="sak" ${ed?"":"disabled"} placeholder="未記入" style="min-height:120px">${esc(tx.sak)}</textarea></div>
+ <div class="panel"><h3>概況</h3><textarea data-tx="gai" ${ed?"":"disabled"} placeholder="未記入" style="min-height:120px">${esc(tx.gai)}</textarea></div></div>`;
+ const list=tasksFor(d.id),c=openCount(list);
+ h+=`<div class="panel"><h3>この部門のタスク <span class="tag t-bl">未完了 ${c.open}</span>${c.over?`<span class="tag t-ng">期限超過 ${c.over}</span>`:""}
+ <span class="r filter"><button data-tf="open" class="${TF==="open"?"on":""}">未完了</button><button data-tf="all" class="${TF==="all"?"on":""}">すべて</button></span></h3>
+ <div class="tw"><table class="tk"><tr><th>状態</th><th>判定</th><th>タスク</th><th>対象</th><th>担当</th><th>期限</th><th>会議日</th><th>経過メモ</th></tr>`;
+ const ord={"未着手":0,"進行中":0,"保留":1,"完了":2};
+ list.filter(t=>TF==="all"||t.st!=="完了").sort((a,b)=>ord[a.st]-ord[b.st]||((a.due||"9")<(b.due||"9")?-1:1)).forEach(t=>{const[x,cc]=due(t);const te=ME.edit==="*"||t.d.some(canEdit)||(t.bu!=="全員"&&t.d.length===0&&ed);
+  h+=`<tr class="${t.st==="完了"?"done":""}"><td><select data-st="${t.id}" ${te?"":"disabled"}>${["未着手","進行中","保留","完了"].map(o=>`<option ${o===t.st?"selected":""}>${o}</option>`).join("")}</select></td><td>${x?`<span class="tag ${cc}">${x}</span>`:""}</td><td class="tt">${esc(t.t)}</td><td>${t.bu==="全員"?'<span class="tag t-bl">全員</span>':t.d.length?t.d.map(i=>deptOf(i).name).join("・"):t.bu+"共通"}</td><td>${esc(t.p)}</td><td>${t.due||"—"}</td><td>${t.m||"—"}</td><td class="tt" style="min-width:160px">${esc(t.memo)}</td></tr>`});
+ h+=`</table></div>${ed?`<div class="addrow"><input class="w" id="nt" placeholder="会議で決まったこと（タスク内容）"><input id="np" placeholder="担当者" style="width:110px"><input id="nd" type="date"><button class="btn sm" id="na">追加</button></div>`:""}
+ <div class="src">「全員」のタスクと、${d.bu}共通（部門指定なし）のタスクも表示しています。</div></div>`;
+ return h;}
+
+function pageAdmin(){let h=`<h2>利用者・PIN（管理者のみ）</h2><div class="meta">試作版のため、ここでの変更は保存されません。</div><div class="panel"><table><tr><th>名前</th><th>入力できる部門</th><th>PIN</th><th>状態</th><th></th></tr>`;
+ USERS.forEach(u=>h+=`<tr><td>${esc(u.n)}</td><td>${u.edit==="*"?"全部門（管理者）":u.edit.length?u.edit.map(i=>deptOf(i).name).join("・"):"なし（閲覧のみ）"}</td><td>●●●●●●</td><td><span class="tag t-ok">有効</span></td><td><button class="btn sub sm">PINをリセット</button></td></tr>`);
+ return h+`</table><div class="addrow"><input class="w" placeholder="追加する人の名前"><select><option>入力できる部門を選ぶ</option>${DEPTS.map(d=>`<option>${d.name}</option>`).join("")}</select><button class="btn sm">追加</button></div></div>`;}
+
+function bind(){const m=document.getElementById("main");
+ m.querySelectorAll("[data-go]").forEach(r=>r.onclick=()=>{TAB=r.dataset.go;render();window.scrollTo(0,0)});
+ m.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;render()});
+ const flash=()=>{const s=document.getElementById("sv");if(s){s.classList.remove("hidden");setTimeout(()=>s.classList.add("hidden"),1500)}};
+ m.querySelectorAll("[data-fc]").forEach(i=>i.onchange=()=>{const v=i.value.trim();const n=parseFloat(v.replace(/[,，¥円\s]/g,""));S.fc[TAB][i.dataset.fc]=v===""||isNaN(n)?null:n/1e6;save();render();flash()});
+ m.querySelectorAll("[data-tx]").forEach(i=>i.onchange=()=>{S.txt[TAB][i.dataset.tx]=i.value;save()});
+ m.querySelectorAll("[data-st]").forEach(i=>i.onchange=()=>{S.tasks.find(t=>t.id==i.dataset.st).st=i.value;save();render()});
+ const na=document.getElementById("na");if(na)na.onclick=()=>{const t=document.getElementById("nt").value.trim();if(!t)return;
+  const d=deptOf(TAB);S.tasks.push({id:S.nextId++,t,bu:d.bu,d:[TAB],p:document.getElementById("np").value.trim(),m:"2026/11/27",due:document.getElementById("nd").value,st:"未着手",memo:""});save();render();};}
+</script></body></html>
